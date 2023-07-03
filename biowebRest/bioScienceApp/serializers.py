@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 class TaxonomySerializer(serializers.ModelSerializer):
     class Meta:
         model = Taxonomy
-        fields = '__all__'
+        fields = ['taxa_id', 'clade', 'genus', 'species']
 
 
 
