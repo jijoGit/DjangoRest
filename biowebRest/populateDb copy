@@ -2,6 +2,7 @@
 import csv
 import os
 import django
+from pathlib import Path
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'biowebRest.settings')
 django.setup()
@@ -20,15 +21,22 @@ protein ID
 Protein Sequence
 
 '''
-data_sequences_file = '.\\csv\\assignment_data_sequences.csv'
-assignment_data_set = '.\\csv\\assignment_data_set.csv'
-pfam_descriptions = '.\\csv\\pfam_descriptions.csv'
+# data_sequences_file = '.\\csv\\assignment_data_sequences.csv'
+# assignment_data_set = '.\\csv\\assignment_data_set.csv'
+# pfam_descriptions = '.\\csv\\pfam_descriptions.csv'
+
+data_sequences_file = Path("./csv/assignment_data_sequences.csv")
+assignment_data_set = Path("./csv/assignment_data_set.csv")
+pfam_descriptions = Path("./csv/pfam_descriptions.csv")
 
 proteins = defaultdict(list)
 organisms = defaultdict(list)
-domains = defaultdict(list)
-pfams = defaultdict(dict)
 protein_organism = defaultdict(list)
+pfams = defaultdict(dict)
+
+domains = defaultdict(list)
+
+
 
 junction_protein_org = defaultdict(list)
 junction_pfam_domain = defaultdict(list)
@@ -79,7 +87,7 @@ def add_domains_id_desc(domain_id, desc, container):
     return container
 
 
-def add_protein_organisms(protein_id,taxa_id, start, end, container):
+def add_protein_organisms(container, protein_id, taxa_id=''):
     '''
     junction table to connect protein and organism as 
     "organisms are made of one or more cells. Each cell contains DNA and proteins. 
@@ -88,28 +96,49 @@ def add_protein_organisms(protein_id,taxa_id, start, end, container):
     for case: Organisms can have more proteins 
     '''
 
+    if taxa_id =='':
+        print('protein_id dont have taxa id', protein_id)
+
+    #keeping track of a protein connected to mmultiple taxa_id
     if protein_id in container:
         if not taxa_id in container[protein_id]:
-            container[protein_id].append( [start, end, taxa_id])
+            container[protein_id].append(taxa_id)
         #else do not do anything ignore 
     
     #otherwise just add it as first entry
     else:
-        container[protein_id] = [start, end, taxa_id]
+        container[protein_id] = [taxa_id]
 
     return(container)
 
 
-def add_domains(domain_id, desc, protein_id, container):
-    if not domain_id in container:
-        container[domain_id] = [desc, protein_id]
-    
+#is domain values unique 
+class DomainIdNotUniqueError(Exception):
+    pass
+
+
+
+def add_domains(domain_id, desc, protein_id, start, end, container):
+    if domain_id not in container:
+        container[domain_id] = {'desc': desc, 'start': start, 'end': end, 'protein_ids': {protein_id}}
+    else:
+        existing_values = container[domain_id]
+        if existing_values['desc'] == desc and existing_values['start'] == start and existing_values['end'] == end:
+            if protein_id in existing_values['protein_ids']:
+                raise DomainIdNotUniqueError(f"add_domains: domain_id and protein_id are not unique: {domain_id}, {protein_id}")
+            else:
+                existing_values['protein_ids'].add(protein_id)
+        else:
+            existing_values['protein_ids'].add(protein_id)
+
     return container
+
 
 
 with open(assignment_data_set) as csv_file:
     csv_reader_assignment_data = csv.reader(csv_file, delimiter='\n')
     for row in csv_reader_assignment_data:
+        
         split_list = row[0].split(',')
 
         proteinId = split_list[0]
@@ -123,114 +152,161 @@ with open(assignment_data_set) as csv_file:
         end=split_list[7]
         proteinLength=split_list[-1]
 
-                
+               
         #create protein dict 
         proteins = add_length_proteins(protein_id=proteinId,protein_length=proteinLength, taxa_id = taxaId, container = proteins)
 
         # create organisms dict
         organisms = add_organisms(taxa_id = taxaId, genus_species= genusSpecies, clade=clade, protein_id=proteinId,container=organisms)
-              
+
         #table to connect protein and organisms
-        protein_organisms = add_protein_organisms(protein_id = proteinId, taxa_id = taxaId, start=split_list[6], end=split_list[7], container = protein_organism)
-        
+        protein_organisms = add_protein_organisms(protein_id = proteinId, taxa_id = taxaId, container = protein_organism)
+
+               
         # create domain dict
-        domains = add_domains(domain_id=domainId, desc=domainDesc, protein_id = proteinId, container=domains)        
+        try:
+            domains = add_domains(domain_id=domainId, desc=domainDesc, protein_id = proteinId, start=start, end=end, container=domains)        
+
+        except DomainIdNotUniqueError as e:
+            print(str(e))
         
 
-print('Length:')
+print('stats:')
 print('organisms:', len(organisms))
 print('proteins:', len(proteins))
 print('domains:',len(domains))
 print('protein_Organism:', len(protein_organism))
 
 
-def delete_all_tables():
-    Domain.objects.all().delete()
-    ProteinOrganismLink.objects.all().delete()
-    Protein.objects.all().delete()
-    Organism.objects.all().delete()
-    Pfam.objects.all().delete()
-     
+def find_max_protein_id(domains):
+    
+    proteins = []
+    for domain_id, values in domains.items():
+        protein_ids = values['protein_ids']
+        proteins.extend(protein_ids)
 
+
+    return len(proteins)
+
+print('lenght of proteins: ', find_max_protein_id(domains))
+
+def delete_all_tables():
+   
+    TaxonomyProteinLink.objects.all().delete()
+    ProteinDomainLink.objects.all().delete()
+    Taxonomy.objects.all().delete()
+    Protein.objects.all().delete()
+    Pfam.objects.all().delete()
+    
+delete_all_tables()
 
 organism_rows = {}
 protein_rows = {}
+organism_protein_rows = {}
 domain_rows = {}
 pfam_rows={}
     
-# print('protein created')
+# # print('protein created')
 
 def populate_organisms_table(organism_rows, organisms):
     for organism_id in organisms:
         content_list = organisms[organism_id]
         if len(content_list)==4:
-            row = Organism.objects.create(taxaId=organism_id, clade=content_list[0], genus=content_list[1], species=content_list[2])           
+            row = Taxonomy.objects.create(taxaId=organism_id, clade=content_list[0], genus=content_list[1], species=content_list[2])           
             row.save()
         else: 
             print('error: populate_db, length is not = 3 for organism_id')
 
         organism_rows[organism_id]=row
         
-                
+
     print('Done organisms table ')
 
     return organism_rows
-    
-def populate_protein_table(organism_rows, proteins):
-    protein_rows = {}
-    
+
+populate_organisms_table(organism_rows, organisms)
+
+def populate_protein_table(proteins, protein_rows):
+        
     for protein_id in proteins:
         content_list = proteins[protein_id]
-        row = Protein.objects.create(proteinId=protein_id, sequence=content_list[0], length=content_list[1])
-        if content_list[2]:
-            organism_id = content_list[2]
-            if organism_id in organism_rows:
-                row.organism = organism_rows[organism_id]
-            else:
-                print('no organism');
-        
+        row = Protein.objects.create(proteinId=protein_id, length=content_list[1])
         row.save()
         protein_rows[protein_id] = row
         
     print('Done Protein table ')
     return protein_rows
 
-def populate_domain_table(domain_rows, protein_rows, domains):
+protein_rows = populate_protein_table(proteins, protein_rows)
+
+
+def populate_taxonomy_Protein_table(protein_organisms, organism_rows, protein_rows, organism_protein_rows):
+
+    for protein, org_list in protein_organisms.items():
+        for taxa_id in org_list:
+            # print(taxa_id)
+            row = TaxonomyProteinLink.objects.create(taxonomy=organism_rows[taxa_id],
+                                                     protein=protein_rows[protein])
+            row_name = f"{protein}_{taxa_id}"
+            organism_protein_rows[row_name] = row
+
+    return organism_protein_rows
+
+      
+organism_protein_rows = populate_taxonomy_Protein_table(protein_organisms, organism_rows, protein_rows, organism_protein_rows)
+
+
+def add_pfam():
+
+    pfam_rows = {}
+
+    with open(pfam_descriptions) as csv_file:
+        csv_reader_pfam_descriptions = csv.reader(csv_file, delimiter='\n')
+        for row in csv_reader_pfam_descriptions:
+            split_list = row[0].split(',')
+            #print(split_list)
+
+            domainId=split_list[0]
+            domainFamDesc=split_list[1]
+            
+            pfam = Pfam(domainId=domainId, domain_description=domainFamDesc)
+            pfam.save()
+
+            pfam_rows[domainId] = pfam
+
+    return pfam_rows
+
+
+
+pfam_rows = add_pfam()
+
+
+def populate_Protein_domainLink_table(protein_rows, domains, pfam_rows):
+    '''PF02800 domain is connected with {'A0A014PQC0', 'B2CK99', 'A0A1B2CT05'} '''
    
     for domain_id, domain_list in domains.items():
-        row = Domain.objects.create(domainId=domain_id,description=domain_list[0],
-                                    protien=protein_rows[domain_list[1]],
-                                    )
-        
+
+        for protein_id in domain_list['protein_ids']:
+          
+            row = ProteinDomainLink.objects.create(
+                protein = protein_rows[protein_id],
+                description = domain_list['desc'],
+                pfam = pfam_rows[domain_id],
+                start = domain_list['start'],
+                stop = domain_list['end'],
+                                        )
+            
         row.save()
         domain_rows[domain_id] = row
         
     print('Done Domain table ')       
     return domain_rows
 
+domain_rows = populate_Protein_domainLink_table(protein_rows, domains, pfam_rows) 
 
-def populate_protein_organism(protein_organism, organism_rows, protein_rows):
-    #container[protein_id] = [start, end, taxa_id]
-    for protein_id, link_list in protein_organism.items():
-        # print('protein_organism', org_id, link_list)
-        
-        protein = protein_rows[protein_id]
-        organism = organism_rows[link_list[2]]
-        start = link_list[0]
-        stop = link_list[1]
 
-        row = ProteinOrganismLink.objects.create(organism=organism, protein=protein, start=start, stop=stop)
-        row.save()
-    print('Done Protein Organism table ')
-        
-# delete_all_tables()
-# organism_rows = populate_organisms_table(organism_rows, organisms)
-# protein_rows = populate_protein_table(organism_rows, proteins)
-# domain_rows = populate_domain_table(domain_rows, protein_rows, domains)
-# populate_protein_organism(protein_organism, organism_rows, protein_rows)
 
-def add_pfam_sequence():
-
+def add_sequence():
 
     with open(data_sequences_file) as csv_file:
         csv_reader_data_sequences = csv.reader(csv_file, delimiter='\n')
@@ -249,20 +325,4 @@ def add_pfam_sequence():
                     print(f"Protein with ID {proteinId} does not exist.")
 
 
-
-
-    with open(pfam_descriptions) as csv_file:
-        csv_reader_pfam_descriptions = csv.reader(csv_file, delimiter='\n')
-        for row in csv_reader_pfam_descriptions:
-            split_list = row[0].split(',')
-            #print(split_list)
-
-            domainId=split_list[0]
-            domainFamDesc=split_list[1]
-            
-            pfam = Pfam(domainId=domainId, domainFamDesc=domainFamDesc)
-            pfam.save()
-
-
-
-# add_pfam_sequence()
+add_sequence()
