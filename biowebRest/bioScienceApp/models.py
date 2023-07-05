@@ -15,31 +15,28 @@ A single protein can have multiple domains, and each domain may have a different
 from django.db import models
 
 class Taxonomy(models.Model):
-    taxa_id = models.CharField(max_length=256, null=False, blank=False)
+    taxaId = models.CharField(max_length=256, unique=True, null=False, blank=False)
     clade = models.CharField(max_length=256, null=False, blank=True)
     genus = models.CharField(max_length=256, null=False, blank=True)
     species = models.CharField(max_length=256, null=False, blank=True)
  
     def __str__(self):
-        return self.taxa_id
+        return self.taxaId
 
-    def get_proteins(self):
-        return Protein.objects.filter(taxonomy=self)
+    # def get_proteins(self):
+    #     return Protein.objects.filter(taxonomy=self)
     
-    def get_pfams(self):
-        return Pfam.objects.filter(proteindomainlink__protein__taxonomy=self)
+    # def get_pfams(self):
+    #     return Pfam.objects.filter(proteindomainlink__protein__taxonomy=self)
     
 class Protein(models.Model):
-    protein_id = models.CharField(max_length=256, null=False, blank=False)
+    proteinId = models.CharField(max_length=256, unique=True, null=False, blank=False)
     sequence = models.CharField(max_length=256, blank=True)
-    taxonomy = models.ForeignKey(Taxonomy, on_delete=models.DO_NOTHING)
     length = models.IntegerField(null=False, blank=True)
 
-    def get_taxonomy(self):
-        return self.taxonomy.all()
-    
-        # That is Sum of the protein domain lengths (start-stop)/length of protein.
+       
     def get_coverage(self):
+        
         protein_domains = self.domain.all()
         print(protein_domains)
         if protein_domains.exists():
@@ -50,20 +47,33 @@ class Protein(models.Model):
 
 
     def __str__(self):
-        return self.protein_id
+        return self.proteinId
     
+class TaxonomyProteinLink(models.Model):
+    taxonomy = models.ForeignKey(Taxonomy, on_delete=models.CASCADE)
+    protein = models.ForeignKey(Protein, on_delete=models.CASCADE)
+
+    class Meta:
+        unique_together = ('taxonomy', 'protein')
+
+    def __str__(self):
+        return f"{self.protein.proteinId}_{self.taxonomy.taxaId}"
+    
+    def get_proteins_on_taxaId(self, taxa_id):
+        pass
+
 
 class Pfam(models.Model):
-    domain_id = models.CharField(max_length=256, null=False, blank=False)
+    domainId = models.CharField(max_length=256, unique=True, null=False, blank=False)
     domain_description = models.CharField(max_length=256, null=False, blank=True)
 
     def __str__(self):
-        return self.domain_id
+        return self.domainId
     
 
 class ProteinDomainLink(models.Model):
     protein =  models.ForeignKey(Protein, on_delete=models.DO_NOTHING, related_name='domain')
-    pfam_id = models.ForeignKey(Pfam, on_delete=models.DO_NOTHING)
+    pfam = models.ForeignKey(Pfam, on_delete=models.DO_NOTHING)
     description = models.CharField(max_length=256, null=False, blank=True)
     start = models.IntegerField(null=False, blank=True)
     stop = models.IntegerField(null=False, blank=True)
@@ -72,13 +82,10 @@ class ProteinDomainLink(models.Model):
         return self.protein.all()
     
     def get_pfam(self):
-        return self.pfam_id.all()
-    
-
-    
+        return self.pfam.all()
 
     def __str__(self):
-        return f"{self.protein.protein_id}_{self.pfam_id.domain_id[:8]}"
+        return f"{self.protein.proteinId}_{self.pfam.domainId[:8]}"
 
 
 

@@ -24,44 +24,41 @@ data_sequences_file = '.\\csv\\assignment_data_sequences.csv'
 assignment_data_set = '.\\csv\\assignment_data_set.csv'
 pfam_descriptions = '.\\csv\\pfam_descriptions.csv'
 
+taxonomys = defaultdict(list)
 proteins = defaultdict(list)
-organisms = defaultdict(list)
-domains = defaultdict(list)
+taxonomyProteinLink = defaultdict(list)
 pfams = defaultdict(dict)
-protein_organism = defaultdict(list)
+proteinDomainLink = defaultdict(list)
 
-junction_protein_org = defaultdict(list)
-junction_pfam_domain = defaultdict(list)
 
-def add_length_proteins(protein_id,protein_length,taxa_id,container):
+# protein_organism = defaultdict(list)
 
-    if not taxa_id:
-        taxa_id = ''
+# junction_protein_org = defaultdict(list)
+# junction_pfam_domain = defaultdict(list)
 
-    # adding 'length' and organism. to proteins dict. 
+def add_proteins(protein_id,protein_length,container):
+
+    # adding 'length' to proteins dict. 
     if protein_id in container:
         #since the protein is already there, lenght has to be appended to.
-        # print('duplicate:', protein_id);
-
+        
         if (len(container[protein_id]) == 1):
             container[protein_id].append(protein_length)
-            container[protein_id].append(taxa_id)
         # else: same information not needed to add
     else:
-        # as Protein Sequence is not there, it is substituted with empty string
-        container[protein_id] = ['',protein_length,taxa_id]
+        container[protein_id] = [protein_length]
         
     return container
 
 
 
 #add row in format : {'568076': ['E', 'Metarhizium', 'robertsii']})
-def add_organisms(taxa_id, clade, genus_species, protein_id ,container):
+def add_taxonomys(taxa_id, clade, genus_species, container):
 
     # split_list[1] is Organism TAXA ID
     if not taxa_id in container:
         genus, species = genus_species.split(' ',1)
-        container[taxa_id] = [clade, genus, species, protein_id]
+        container[taxa_id] = [clade, genus, species]
     else: #not likely 
         #is the Organism Clade Idenitifer and Genus Species different
         if not container[taxa_id][0] == clade:
@@ -125,11 +122,13 @@ with open(assignment_data_set) as csv_file:
 
                 
         #create protein dict 
-        proteins = add_length_proteins(protein_id=proteinId,protein_length=proteinLength, taxa_id = taxaId, container = proteins)
+        proteins = add_proteins(protein_id=proteinId,protein_length=proteinLength, container = proteins)
 
         # create organisms dict
-        organisms = add_organisms(taxa_id = taxaId, genus_species= genusSpecies, clade=clade, protein_id=proteinId,container=organisms)
-              
+        organisms = add_taxonomys(taxa_id = taxaId, genus_species= genusSpecies, clade=clade, container=taxonomys)
+
+        # taxonomyProteinLink = add_taxonomyProteinLink()
+    
         #table to connect protein and organisms
         protein_organisms = add_protein_organisms(protein_id = proteinId, taxa_id = taxaId, start=split_list[6], end=split_list[7], container = protein_organism)
         

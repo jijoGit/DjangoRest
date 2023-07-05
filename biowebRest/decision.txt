@@ -5,3 +5,6 @@ return statement - 29th June
 Changed Names of Table to reflect - 29th June 
 
 1st july: happy cases are working 
+
+3rd July: git, unique db, validators
+    since, taxa and protein has many to many relation, a new table created 
