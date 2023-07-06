@@ -60,8 +60,8 @@ class FileDataReader:
             # else: same information not needed to add
         else:
             # as Protein Sequence is not there, it is substituted with empty string
-            container[protein_id] = ['',protein_length,taxa_id]
-            
+            container[protein_id] = [protein_length,taxa_id]
+                   
         return container
     
     def add_organisms(self, taxa_id, clade, genus_species, protein_id ,container):

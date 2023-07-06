@@ -16,6 +16,15 @@ class OrganismFactory(factory.django.DjangoModelFactory):
         model = Taxonomy
 
 
+class ProteinSanSeqFactory(factory.django.DjangoModelFactory):
+    proteinId = 'A0A016S8J7'
+    sequence = ''
+    length = 101
+    
+    class Meta:
+        model = Protein
+
+
 class ProteinFactory(factory.django.DjangoModelFactory):
     protein_id = 'A0A016S8J7'
     sequence = 'MVIGVGFLLVLFSSSVLGILNAGVQLRIEELFDTPGHTNNWAVLVCTSRFWFNYRHVSNVLALYHTVKRLGIPDSNIILMLAEDVPCNPRNPRPEAAVLSA'
