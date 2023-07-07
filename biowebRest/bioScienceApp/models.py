@@ -38,7 +38,6 @@ class Protein(models.Model):
     def get_coverage(self):
         
         protein_domains = self.domain.all()
-        print(protein_domains)
         if protein_domains.exists():
             domain_lengths = sum(domain.stop - domain.start for domain in protein_domains)
             return domain_lengths / self.length

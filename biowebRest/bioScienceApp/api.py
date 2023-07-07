@@ -130,7 +130,6 @@ class CreateProteins(APIView):
             protein_obj = {}
 
         if not protein_obj: 
-            print('create protein', protein_data)
             serializer = ProteinSerializer(data=protein_data)
             serializer.is_valid(raise_exception=True)
             protein_obj = serializer.save()
@@ -152,7 +151,6 @@ class CreateProteins(APIView):
             taxonomy_serializer = TaxonomySerializer(data=taxonomy_data)
             taxonomy_serializer.is_valid(raise_exception=True)
             taxonomy_obj = taxonomy_serializer.save()
-            print('taxonomy_obj', taxonomy_obj)
 
 
         return taxonomy_obj
@@ -173,7 +171,6 @@ class CreateProteins(APIView):
                 pfam_obj = None
 
             if not pfam_obj: 
-                print('not pfam_obj', domain_data)
                 link = ProteinDomainLinkSerializer(data=domain_data)
                 domain_serialized.append(link)
                 link.is_valid(raise_exception=True)
@@ -187,8 +184,6 @@ class CreateProteins(APIView):
     }
         
         if not TaxonomyProteinLink.objects.filter(taxonomy=taxonomy_obj, protein=protein_obj).exists():
-            
-            print(taxonomy_protein_link_data)
             taxaProLinkSerializer = TaxonomyProteinLinkSerializer(data=taxonomy_protein_link_data)
             taxaProLinkSerializer.is_valid(raise_exception=True)
             taxaProLinkSerializer.save()

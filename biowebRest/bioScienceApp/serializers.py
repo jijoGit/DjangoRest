@@ -33,7 +33,6 @@ class ProteinDomainLinkSerializer(serializers.ModelSerializer):
 
 
     def create(self, validated_data):
-        print('validated_data', validated_data)
         pfam_data = validated_data.pop('pfam')
         pfam, _ = Pfam.objects.get_or_create(**pfam_data)
 
@@ -49,7 +48,6 @@ class ProteinDomainLinkSerializer(serializers.ModelSerializer):
             stop=validated_data['stop'] 
         )
 
-        print('ProteinDomainLinkSerializer link', link)
         return link
 
 
@@ -132,6 +130,7 @@ class ProteinGetSerializer(serializers.ModelSerializer):
     ''' Serializer for the protein object'''
     taxonomy = serializers.SerializerMethodField()
     domains = serializers.SerializerMethodField()
+    protein_id = serializers.CharField(source='proteinId')
 
     '''using proteinDomainlink'''
     def get_domains(self, obj):
@@ -154,5 +153,5 @@ class ProteinGetSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Protein
-        fields = ('proteinId', 'sequence', 'taxonomy', 'length', 'domains')
+        fields = ('protein_id', 'sequence', 'taxonomy', 'length', 'domains')
 
