@@ -268,3 +268,14 @@ if __name__ == '__main__':
     print('script completed.')
 
 
+    # def delete_all_tables():
+    #     TaxonomyProteinLink.objects.all().delete()
+    #     ProteinDomainLink.objects.all().delete()
+    #     Taxonomy.objects.all().delete()
+    #     Protein.objects.all().delete()
+    #     Pfam.objects.all().delete()
+
+    #     print('tables deleted')
+
+    
+    # delete_all_tables()

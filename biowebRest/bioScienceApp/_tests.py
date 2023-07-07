@@ -43,15 +43,19 @@ json_data = '''
         }
         '''
 
-class ProteinsListSerializerTest(APITestCase):
+class ProteinsSerializerTest(APITestCase):
 
     def test_proteinsListSerializer(self):
         # JSON data
         
         json_obj = json.loads(json_data)
         serializer = ProteinSerializer(data=json_obj)
+
+   
         self.assertTrue(serializer.is_valid())
+   
         serialized_data = serializer.data
+
         self.assertEqual(serialized_data['taxonomy']['taxa_id'], str(json_obj['taxonomy']['taxa_id']))
         self.assertEqual(serialized_data['sequence'], json_obj['sequence'])
         self.assertEqual(serialized_data['taxonomy']['taxa_id'], str(json_obj['taxonomy']['taxa_id']))

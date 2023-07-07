@@ -3,9 +3,13 @@ from .models import *
 from django.shortcuts import get_object_or_404
 
 class TaxonomySerializer(serializers.ModelSerializer):
+
+    taxa_id = serializers.CharField(source="taxaId")
+
+
     class Meta:
         model = Taxonomy
-        fields = ['taxaId', 'clade', 'genus', 'species']
+        fields = ['taxa_id', 'clade', 'genus', 'species']
 
 
 
@@ -20,15 +24,17 @@ class PfamSerializer(serializers.ModelSerializer):
 
 
 class ProteinDomainLinkSerializer(serializers.ModelSerializer):
-    pfam_id = PfamSerializer()
+    pfam_id = PfamSerializer(source="pfam")
+    # protein = serializers.CharField(source='protein')
 
     class Meta:
         model = ProteinDomainLink
-        fields = '__all__'
+        fields = ['protein', 'pfam_id', 'description', 'start', 'stop']
 
 
     def create(self, validated_data):
-        pfam_data = validated_data.pop('pfam_id')
+        print('validated_data', validated_data)
+        pfam_data = validated_data.pop('pfam')
         pfam, _ = Pfam.objects.get_or_create(**pfam_data)
 
         # print('ProteinDomainLinkSerializer pfam', pfam)
@@ -58,18 +64,17 @@ class ProteinDomainLinkGetSerializer(serializers.ModelSerializer):
 
 class ProteinSerializer(serializers.ModelSerializer):
     ''' Serializer for the protein object'''
-    # taxonomy = TaxonomySerializer()
-    # lookup_field = 'protein_id'
 
-    # domains = ProteinDomainLinkGetSerializer(many=True)
-    
+    protein_id = serializers.CharField(source='proteinId')
+   
     class Meta:
         model = Protein
-        fields = ['proteinId', 'sequence', 'length']
+        fields = ['protein_id','sequence', 'length']
 
     def create(self, validated_data):
+        
         protein, _ = Protein.objects.get_or_create(
-            proteinId=validated_data.get('protein_id'),
+            proteinId=validated_data.get('proteinId'),
             defaults={
                 'sequence': validated_data.get('sequence'),
                 'length': validated_data.get('length')

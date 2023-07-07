@@ -99,38 +99,38 @@ class CreateProteins(APIView):
     serializer_class = ProteinSerializer
 
     def post(self, request):
-        
+                    
         domains_data = request.data.pop("domains", None)
+        
         taxonomy = request.data.pop("taxonomy", None)
-
-        print('request.data', request.data)
-
+        
         protein_obj = self.create_protein(request.data)
+
         if taxonomy:
             taxonomy_obj =self.create_taxonomy(taxonomy)
 
         if domains_data:
             self.create_domains(protein_obj, domains_data)
 
-        print(taxonomy_obj, protein_obj)
-
         if taxonomy_obj and protein_obj:
             self.create_TaxonomyProteinLink(taxonomy_obj, protein_obj)
-        
 
-        return Response({'success'}, status=status.HTTP_201_CREATED)
+
+        return Response({'success':protein_obj.proteinId}, status=status.HTTP_201_CREATED)
    
 
     def create_protein(self, protein_data):
         protein_id = protein_data.get('protein_id')
-
-        protein_obj = None
+               
+        protein_obj = {}
+        
         try:
             protein_obj = Protein.objects.get(proteinId=protein_id)
         except Protein.DoesNotExist:
-            protein_obj = None
+            protein_obj = {}
 
         if not protein_obj: 
+            print('create protein', protein_data)
             serializer = ProteinSerializer(data=protein_data)
             serializer.is_valid(raise_exception=True)
             protein_obj = serializer.save()
@@ -173,6 +173,7 @@ class CreateProteins(APIView):
                 pfam_obj = None
 
             if not pfam_obj: 
+                print('not pfam_obj', domain_data)
                 link = ProteinDomainLinkSerializer(data=domain_data)
                 domain_serialized.append(link)
                 link.is_valid(raise_exception=True)
