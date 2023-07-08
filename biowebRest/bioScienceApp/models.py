@@ -58,8 +58,8 @@ class TaxonomyProteinLink(models.Model):
     def __str__(self):
         return f"{self.protein.proteinId}_{self.taxonomy.taxaId}"
     
-    def get_proteins_on_taxaId(self, taxa_id):
-        pass
+    # def get_proteins_on_taxaId(self, taxa_id):
+    #     pass
 
 
 class Pfam(models.Model):

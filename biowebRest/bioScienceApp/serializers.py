@@ -12,7 +12,7 @@ class TaxonomySerializer(serializers.ModelSerializer):
         fields = ['taxa_id', 'clade', 'genus', 'species']
 
 
-
+# done test cases 
 class PfamSerializer(serializers.ModelSerializer):
 
     #renaming the field name to match the specification.
@@ -23,9 +23,9 @@ class PfamSerializer(serializers.ModelSerializer):
         fields = ["domain_id","domain_description"]
 
 
+
 class ProteinDomainLinkSerializer(serializers.ModelSerializer):
     pfam_id = PfamSerializer(source="pfam")
-    # protein = serializers.CharField(source='protein')
 
     class Meta:
         model = ProteinDomainLink
@@ -33,6 +33,7 @@ class ProteinDomainLinkSerializer(serializers.ModelSerializer):
 
 
     def create(self, validated_data):
+        
         pfam_data = validated_data.pop('pfam')
         pfam, _ = Pfam.objects.get_or_create(**pfam_data)
 
@@ -60,38 +61,20 @@ class ProteinDomainLinkGetSerializer(serializers.ModelSerializer):
         fields = ['pfam_id', 'description', 'start', 'stop']
 
 
-class ProteinSerializer(serializers.ModelSerializer):
-    ''' Serializer for the protein object'''
-
-    protein_id = serializers.CharField(source='proteinId')
-   
-    class Meta:
-        model = Protein
-        fields = ['protein_id','sequence', 'length']
-
-    def create(self, validated_data):
-        
-        protein, _ = Protein.objects.get_or_create(
-            proteinId=validated_data.get('proteinId'),
-            defaults={
-                'sequence': validated_data.get('sequence'),
-                'length': validated_data.get('length')
-            }
-        )
-        return protein
 
 
-class ProteinTaxaSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = TaxonomyProteinLink
-        fields = ['proteinId']
+# class ProteinTaxaSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = TaxonomyProteinLink
+#         fields = ['proteinId']
 
 
-class TaxonomyGetSerializer(serializers.ModelSerializer):
+# class TaxonomyGetSerializer(serializers.ModelSerializer):
 
-    class Meta:
-        model = Taxonomy
-        fields = ["taxaId"]
+#     class Meta:
+#         model = Taxonomy
+#         fields = ["taxaId"]
+
 
 
 class GetPfamOnTaxaIdSerializer(serializers.ModelSerializer):
@@ -102,20 +85,21 @@ class GetPfamOnTaxaIdSerializer(serializers.ModelSerializer):
         model = ProteinDomainLink
         fields = ['id', 'pfam_id']
 
+
 class TaxonomyProteinLinkSerializer(serializers.ModelSerializer):
+    '''Used to check while creating this link, via createprotein api'''
 
     class Meta:
         model = TaxonomyProteinLink
         fields = ['taxonomy', 'protein']
 
 
+# class TaxonomyProteinLinkGetSerializer(serializers.ModelSerializer):
+#     taxonomy = TaxonomySerializer()
 
-class TaxonomyProteinLinkGetSerializer(serializers.ModelSerializer):
-    taxonomy = TaxonomySerializer()
-
-    class Meta:
-        model = ProteinDomainLink
-        fields = ['taxonomy']
+#     class Meta:
+#         model = ProteinDomainLink
+#         fields = ['taxonomy']
 
 
 class TaxonomyProteinSerializer(serializers.Serializer):
@@ -155,3 +139,23 @@ class ProteinGetSerializer(serializers.ModelSerializer):
         model = Protein
         fields = ('protein_id', 'sequence', 'taxonomy', 'length', 'domains')
 
+
+class ProteinSerializer(serializers.ModelSerializer):
+    ''' Serializer to CREATE protein object'''
+
+    protein_id = serializers.CharField(source='proteinId')
+   
+    class Meta:
+        model = Protein
+        fields = ['protein_id','sequence', 'length']
+
+    def create(self, validated_data):
+        
+        protein, _ = Protein.objects.get_or_create(
+            proteinId=validated_data.get('proteinId'),
+            defaults={
+                'sequence': validated_data.get('sequence'),
+                'length': validated_data.get('length')
+            }
+        )
+        return protein
