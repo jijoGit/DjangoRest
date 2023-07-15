@@ -1,6 +1,9 @@
+
+# I wrote this code 
 from rest_framework import serializers
 from .models import *
-from django.shortcuts import get_object_or_404
+# from django.shortcuts import get_object_or_404
+
 
 class TaxonomySerializer(serializers.ModelSerializer):
 
@@ -11,8 +14,6 @@ class TaxonomySerializer(serializers.ModelSerializer):
         model = Taxonomy
         fields = ['taxa_id', 'clade', 'genus', 'species']
 
-
-# done test cases 
 class PfamSerializer(serializers.ModelSerializer):
 
     #renaming the field name to match the specification.
@@ -62,21 +63,6 @@ class ProteinDomainLinkGetSerializer(serializers.ModelSerializer):
 
 
 
-
-# class ProteinTaxaSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = TaxonomyProteinLink
-#         fields = ['proteinId']
-
-
-# class TaxonomyGetSerializer(serializers.ModelSerializer):
-
-#     class Meta:
-#         model = Taxonomy
-#         fields = ["taxaId"]
-
-
-
 class GetPfamOnTaxaIdSerializer(serializers.ModelSerializer):
     id = serializers.CharField(source='pk')
     pfam_id = PfamSerializer(source="pfam")
@@ -94,14 +80,6 @@ class TaxonomyProteinLinkSerializer(serializers.ModelSerializer):
         fields = ['taxonomy', 'protein']
 
 
-# class TaxonomyProteinLinkGetSerializer(serializers.ModelSerializer):
-#     taxonomy = TaxonomySerializer()
-
-#     class Meta:
-#         model = ProteinDomainLink
-#         fields = ['taxonomy']
-
-
 class TaxonomyProteinSerializer(serializers.Serializer):
     '''not using model serailizer to control the return data'''
     taxa_id = serializers.CharField(source='taxonomy.taxaId')
@@ -114,7 +92,7 @@ class ProteinGetSerializer(serializers.ModelSerializer):
     ''' Serializer for the protein object'''
     taxonomy = serializers.SerializerMethodField()
     domains = serializers.SerializerMethodField()
-    protein_id = serializers.CharField(source='proteinId')
+    protein_id = serializers.CharField(source='proteinId') #rename 
 
     '''using proteinDomainlink'''
     def get_domains(self, obj):
@@ -125,7 +103,7 @@ class ProteinGetSerializer(serializers.ModelSerializer):
     def get_taxonomy(self, obj):
         taxonomyProtein_obj = TaxonomyProteinLink.objects.filter(protein=obj)
         
-        '''to not to return a list if singlye object'''
+        '''to not to return a list if single object'''
         if len(taxonomyProtein_obj) == 1:
             taxonomyProtein_obj = TaxonomyProteinLink.objects.get(protein=obj)
             serializer = TaxonomyProteinSerializer(taxonomyProtein_obj)
@@ -159,3 +137,29 @@ class ProteinSerializer(serializers.ModelSerializer):
             }
         )
         return protein
+    
+    def validate(self, attrs):
+        protein_id = attrs.get('proteinId')
+        sequence = attrs.get('sequence')
+        length = attrs.get('length')
+
+        if len(protein_id) < 3:
+            raise serializers.ValidationError("Protein ID must be at least 3 characters long.")
+
+        #https://www.geeksforgeeks.org/python-program-to-check-if-a-string-has-at-least-one-letter-and-one-number/
+        #this code is from above link
+        # alphanumeric check 
+        checkStringNumber = lambda s: any(c.isalpha() for c in s) and any(c.isdigit() for c in s)
+        # copy end
+        if not checkStringNumber(protein_id):
+            raise serializers.ValidationError("protein_id must contain only alphanumeric characters.")
+
+        try:
+            int(length)
+        except ValueError:
+            raise serializers.ValidationError("Length must be an integer.")
+
+        return attrs
+    
+
+    #end of code I wrote 

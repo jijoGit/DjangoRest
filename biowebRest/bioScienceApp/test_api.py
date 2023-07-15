@@ -1,3 +1,5 @@
+# I wrote this code 
+
 import json
 from django.test import TestCase
 from django.urls import reverse
@@ -10,6 +12,7 @@ from .model_factories import *
 from .serializers import *
 from rest_framework import status
 from pprint import pprint
+from django.shortcuts import get_object_or_404
 
 class ProteinTest(APITestCase):
 
@@ -253,3 +256,5 @@ class ProteinTest(APITestCase):
 
         self.assertEqual(response_coverage, expected_coverage)
 
+
+#end of code I wrote 

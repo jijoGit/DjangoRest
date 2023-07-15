@@ -1,3 +1,5 @@
+# I wrote this code 
+
 '''
 This data provides specific details about the protein, including its unique identifier (A0A014PQC0), 
 the taxonomic ID of the organism it is found in (568076), its clade (E), 
@@ -99,3 +101,5 @@ A0A0V1IMU6, A0A0D9QY32, A0A016S8J7
 Protien has one to many association 
 
 '''  
+
+#end of code I wrote 

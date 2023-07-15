@@ -1,3 +1,5 @@
+
+# I wrote this code 
 import json
 from django.test import TestCase
 from django.urls import reverse
@@ -9,7 +11,7 @@ from rest_framework.test import APITestCase
 from .model_factories import *
 from .serializers import *
 
-
+from django.shortcuts import get_object_or_404
 
 class ProteinsSerializerTest(APITestCase):
 
@@ -286,3 +288,4 @@ class TaxonomySerializerTest(TestCase):
         self.assertEqual(data['genus'], 'Sample Genus')
         self.assertEqual(data['species'], 'Sample Species')
 
+#end of code I wrote 

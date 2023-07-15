@@ -1,3 +1,5 @@
+
+# I wrote this code 
 from django.urls import path, re_path
 from . import views
 from . import api
@@ -11,3 +13,5 @@ urlpatterns = [
     path('api/pfams/<int:taxa_id>', api.GetPfamOnTaxaId.as_view(), name='getPfamOnTaxaId_api'),  
     path('api/coverage/<str:protein_id>', api.GetCoverage.as_view(), name='getCoverage_api'),
 ]
+
+#end of code I wrote 

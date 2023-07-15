@@ -1,13 +1,12 @@
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from rest_framework.parsers import JSONParser
+# I wrote this code 
 
-from rest_framework.decorators import api_view
+# from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from django.shortcuts import get_object_or_404
 
 from .models import *
 from .serializers import *
@@ -99,6 +98,16 @@ class CreateProteins(APIView):
     serializer_class = ProteinSerializer
 
     def post(self, request):
+        '''
+        It accepts the post request. To make it robust it can handle only protein data, 
+        protein + taxonomy data, or with domains data. 
+        
+        It also checks if given id is already present, in that case, if any other data 
+        is different it creates that particular entry, for instance, 
+        if protein and taxonomy is already in database but not domain information, 
+        then it creates domain and link the table accordingly
+
+        '''
                     
         domains_data = request.data.pop("domains", None)
         
@@ -161,7 +170,7 @@ class CreateProteins(APIView):
         domain_serialized = []
         
         for domain_data in domains:
-            domain_data['protein'] = protein.id 
+            domain_data['protein'] = protein.id #protein data is added, used to link.
             pfam = domain_data.get('pfam_id')
             domain_id = pfam.get('domain_id')
 
@@ -187,3 +196,6 @@ class CreateProteins(APIView):
             taxaProLinkSerializer = TaxonomyProteinLinkSerializer(data=taxonomy_protein_link_data)
             taxaProLinkSerializer.is_valid(raise_exception=True)
             taxaProLinkSerializer.save()
+
+
+#end of code I wrote 

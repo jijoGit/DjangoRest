@@ -47,7 +47,7 @@ class FileDataReader:
 
         return self.proteins , self.organisms, self.protein_organism , self.domains
     
-    def add_proteins(selc, protein_id,protein_length,taxa_id,container):
+    def add_proteins(self, protein_id,protein_length,taxa_id,container):
         if not taxa_id:
             taxa_id = ''
         # adding 'length' and organism. to proteins dict. 
