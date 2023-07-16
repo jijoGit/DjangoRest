@@ -1,8 +1,0 @@
-{
-  "[python]": {
-    "editor.defaultFormatter": "ms-python.autopep8"
-  },
-  "python.formatting.provider": "none",
-  "editor.formatOnSave": false,
-  "editor.defaultFormatter": "ms-python.vscode-pylance"
-}
